@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 
 interface UserData {
-  userName: string;
-  email: string;
+  username: string;
   password: string;
 }
 
-const UserRegister: React.FC = () => {
-  const [userName, setUserName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+const UserLogin: React.FC = () => {
+  const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -16,13 +14,14 @@ const UserRegister: React.FC = () => {
     e.preventDefault();
 
     const userData: UserData = {
-      userName,
-      email,
+      username,
       password,
     };
 
     try {
-      const response = await fetch("http://localhost:8080/user/register", {
+
+        console.log("User Data:", userData);
+      const response = await fetch("http://localhost:8080/user/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -32,50 +31,42 @@ const UserRegister: React.FC = () => {
 
       console.log("Response:", response);
 
-      if (response.status === 201) {
-        setMessage("User registered successfully!");
+      if (response.ok) {
+        response.json().then((data) => {
+          console.log("Login successful:", data);
+            localStorage.setItem("Authorization", data.token);
+
+            window.location.href = "/home"; 
+        }
+        );
+        setMessage("Login successful!");
       } else {
-        setMessage("Failed to register user.");
-        console.error("Failed to register user:", response.statusText);
+        setMessage("Failed to login.");
+        console.error("Failed to login:", response.statusText);
       }
     } catch (error) {
-      setMessage("Error during registration.");
-      console.error("Error during registration:", error);
+      setMessage("Error during login.");
+      console.error("Error during login:", error);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-96 p-6 bg-white rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">Register for Public Transport Tickets</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">Login to Public Transport Tickets</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-gray-600 font-medium" htmlFor="userName">
-              Full Name
+              Username
             </label>
             <input
               type="text"
               id="userName"
               name="userName"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your full name"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-600 font-medium" htmlFor="email">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email"
+              placeholder="Enter your username"
               required
             />
           </div>
@@ -107,7 +98,7 @@ const UserRegister: React.FC = () => {
             type="submit"
             className="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            Register
+            Login
           </button>
         </form>
       </div>
@@ -115,4 +106,4 @@ const UserRegister: React.FC = () => {
   );
 };
 
-export default UserRegister;
+export default UserLogin;
