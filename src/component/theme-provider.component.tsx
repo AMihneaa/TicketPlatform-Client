@@ -22,14 +22,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       if (theme === "light" || theme === "dark") {
-        document.documentElement.classList.remove("light", "dark")
-        document.documentElement.classList.add(theme)
+        document.body.classList.remove("light", "dark")
+        document.body.classList.add(theme)
         localStorage.setItem("theme", theme)
       }
     } catch (error) {
       console.error("💥 Error applying theme:", error)
     }
-  }, [theme])
+  }, [theme])  
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

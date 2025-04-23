@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/sonner"
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-background font-sans antialiased">
+    <ThemeProvider >
+      <div className="bg-background font-sans antialiased min-h-screen">
         <Navbar />
         <main className="flex-1">
           <Outlet />
