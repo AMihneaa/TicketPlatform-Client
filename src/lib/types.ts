@@ -23,6 +23,22 @@ export interface Route {
     status: "upcoming" | "completed" | "cancelled"
     price: string
   }
+
+  export interface ReservationDetails {
+    [reservationId: string]: {
+      [transportType: string]: {
+        "Reservation Status": "ACTIVE" | "INACTIVE";
+        Routes: string[];
+      };
+    };
+  }
+
+  export interface NormalizedReservation {
+    id: string;
+    transportType: string;
+    reservationStatus: "ACTIVE" | "INACTIVE";
+    routes: string[];
+  }
   
   export interface DepartureOption {
     time: string

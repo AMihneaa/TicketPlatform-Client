@@ -21,7 +21,7 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
             <Bus className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">TravelEase</span>
+            <span className="hidden font-bold sm:inline-block">Travel</span>
           </Link>
         </div>
 

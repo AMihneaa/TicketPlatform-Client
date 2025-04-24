@@ -4,6 +4,7 @@ import HomePage from "@/pages/Home.pages"
 import UserRegister from "@/pages/UserRegister.page"
 import UserLogin from "@/pages/UserLogin.page"
 import MyTicketsPage from "@/pages/Ticket"
+import RouteSearchPage from "@/pages/Search.pages"
 
 export const router = createBrowserRouter([
   {
@@ -23,9 +24,13 @@ export const router = createBrowserRouter([
         element: <UserLogin />,
       },
       {
-        path: "test",
+        path: "my-tickets",
         element: <MyTicketsPage />,
       },
+      {
+        path: "routes/search",
+        element: <RouteSearchPage />,
+      }
     ],
   },
 ])

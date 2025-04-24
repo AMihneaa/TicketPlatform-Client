@@ -22,27 +22,27 @@ export default function HomePage() {
       id: 1,
       title: "New Express Routes Added",
       description: "We've added 5 new express routes connecting major cities with faster travel times.",
-      date: "May 15, 2023",
+      date: "May 15",
       category: "Routes",
     },
     {
       id: 2,
       title: "Summer Discount Program",
       description: "Get up to 25% off on all tickets booked for summer travel between June and August.",
-      date: "May 10, 2023",
+      date: "May 10",
       category: "Promotions",
     },
     {
       id: 3,
       title: "Mobile App Update",
       description: "Our mobile app now features real-time tracking and instant notifications for your journey.",
-      date: "May 5, 2023",
+      date: "May 5",
       category: "Technology",
     },
   ]
 
   const popularRoutes = [
-    { id: 1, from: "New York", to: "Boston", price: "$45", duration: "4h 30m", departures: "Hourly" },
+    { id: 1, from: "Bucuresti", to: "Constanta", price: "$25", duration: "1h 30m", departures: "Hourly" },
     { id: 2, from: "Los Angeles", to: "San Francisco", price: "$55", duration: "6h 15m", departures: "Every 2 hours" },
     { id: 3, from: "Chicago", to: "Detroit", price: "$35", duration: "5h 45m", departures: "4 times daily" },
     { id: 4, from: "Miami", to: "Orlando", price: "$30", duration: "3h 30m", departures: "6 times daily" },
@@ -181,7 +181,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold tracking-tight">Latest News</h2>
-              <p className="text-muted-foreground">Stay updated with TravelEase</p>
+              <p className="text-muted-foreground">Stay updated with Travel</p>
             </div>
             <Button variant="ghost"  className="gap-1">
               <Link to="/news">

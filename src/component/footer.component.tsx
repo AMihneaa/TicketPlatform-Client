@@ -9,7 +9,7 @@ export default function Footer() {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Bus className="h-5 w-5" />
-              <span className="font-bold">TravelEase</span>
+              <span className="font-bold">Travel</span>
             </div>
             <p className="text-sm text-muted-foreground">Book your journey with ease and comfort.</p>
             <div className="flex space-x-3">
@@ -22,7 +22,7 @@ export default function Footer() {
                 <span className="sr-only">Twitter</span>
               </Link>
               <Link to="#" className="text-muted-foreground hover:text-foreground">
-                <h1>Ceva</h1>
+                <h1>Instagram</h1>
                 <span className="sr-only">Instagram</span>
               </Link>
             </div>
@@ -105,7 +105,7 @@ export default function Footer() {
         </div>
         <div className="mt-8 border-t pt-8 text-center">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} TravelEase. All rights reserved.
+            © {new Date().getFullYear()} Travel. All rights reserved.
           </p>
         </div>
       </div>
