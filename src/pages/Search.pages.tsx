@@ -5,6 +5,8 @@ import RouteResults from "@/component/route-result.component"
 import { Card, CardContent } from "@/components/ui/card"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useLocation } from "react-router-dom"
+import { useEffect } from "react"
 
 interface Stop {
   location: string
@@ -28,6 +30,15 @@ export default function RouteSearchPage() {
   const [searchPerformed, setSearchPerformed] = useState(false)
 
   const navigate = useNavigate()
+  const location = useLocation()
+  const { departure, arrival } = location.state || {}
+  
+  useEffect(() => {
+    if (departure && arrival) {
+      handleSearch(departure, arrival)
+    }
+  }, [departure, arrival])
+
   const isAuthenticated = !!localStorage.getItem("Authorization")
 
   const handleSearch = async (departure: string, arrival: string) => {
@@ -42,7 +53,7 @@ export default function RouteSearchPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/reservation/user/${encodeURIComponent(departure)}/to/${encodeURIComponent(arrival)}`,
+        `https://47287039-bf8e-4eb6-a406-71bfe9007b4f.eu-central-1.cloud.genez.io/reservation/user/${encodeURIComponent(departure)}/to/${encodeURIComponent(arrival)}`,
         {
           headers: {
             "Content-Type": "application/json",

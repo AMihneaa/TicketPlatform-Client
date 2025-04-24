@@ -4,7 +4,6 @@ import IMAGE from "@/assets/imagine1.jpg"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -15,6 +14,8 @@ import {
   Calendar,
   Clock,
 } from "lucide-react"
+
+import QuickSearchSection from "@/component/quick-search.component"
 
 export default function HomePage() {
   const newsItems = [
@@ -43,9 +44,9 @@ export default function HomePage() {
 
   const popularRoutes = [
     { id: 1, from: "Bucuresti", to: "Constanta", price: "$25", duration: "1h 30m", departures: "Hourly" },
-    { id: 2, from: "Los Angeles", to: "San Francisco", price: "$55", duration: "6h 15m", departures: "Every 2 hours" },
-    { id: 3, from: "Chicago", to: "Detroit", price: "$35", duration: "5h 45m", departures: "4 times daily" },
-    { id: 4, from: "Miami", to: "Orlando", price: "$30", duration: "3h 30m", departures: "6 times daily" },
+    { id: 2, from: "Pitesti", to: "Bucuresti", price: "$55", duration: "2h 15m", departures: "Every 2 hours" },
+    { id: 3, from: "Pitesti", to: "Constanta", price: "$35", duration: "3h 45m", departures: "4 times daily" },
+    { id: 4, from: "Cernavoda", to: "Bucuresti", price: "$30", duration: "1h 30m", departures: "6 times daily" },
   ]
 
   return (
@@ -84,7 +85,7 @@ export default function HomePage() {
       </section>
 
       {/* Search Section */}
-      <section className="container px-4 md:px-6">
+      {/* <section className="container px-4 md:px-6">
         <div className="mx-auto max-w-3xl">
           <Card>
             <CardHeader>
@@ -124,7 +125,8 @@ export default function HomePage() {
             </CardContent>
           </Card>
         </div>
-      </section>
+      </section> */}
+      <QuickSearchSection />
 
       {/* Popular Routes Section */}
       <section className="container px-4 md:px-6">

@@ -89,6 +89,48 @@ export default function RouteResults({ routeOptions }: RouteResultsProps) {
     }
   }
 
+  const reserveTicket = async (transportIds: string[]) => {
+    console.log("Reserving ticket for:", transportIds)
+  
+    const token = localStorage.getItem("Authorization")
+  
+    if (!token) {
+      alert("You must be logged in to reserve tickets.")
+      return
+    }
+  
+    for (const routeID of transportIds) {
+      try {
+        const response = await fetch(
+          `https://47287039-bf8e-4eb6-a406-71bfe9007b4f.eu-central-1.cloud.genez.io/reservation/user/route/${routeID}/ROUTE`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+  
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error(`Failed to reserve for route ${routeID}:`, errorText)
+          alert(`Error reserving route ${routeID}: ${errorText}`)
+        } else {
+          console.log(`Successfully reserved ticket for route ${routeID}`)
+        }
+      } catch (error) {
+        console.error("Network error:", error)
+        alert("Network error while reserving ticket.")
+      }
+    }
+  
+    alert("Reservation process completed!")
+    window.location.replace("/my-tickets")
+  }
+  
+  
+
   const getRouteEndpoints = (route: Route) => {
     if (!route.stops || route.stops.length === 0) {
       return { departure: "Unknown", arrival: "Unknown" }
@@ -221,7 +263,15 @@ export default function RouteResults({ routeOptions }: RouteResultsProps) {
                               {routeOption.reduce((total, route) => total + route.availableSeats, 0)} seats available
                             </Badge>
                           </div>
-                          <Button className="mt-2">Select</Button>
+                          <Button
+                            className="mt-2"
+                            onClick={() => {
+                                const transportIds = routeOption.map((route) => route.id)
+                                reserveTicket(transportIds)
+                            }}
+                            >
+                            Select
+                            </Button>
                         </div>
                       </div>
 

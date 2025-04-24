@@ -22,7 +22,7 @@ const UserRegister: React.FC = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/user/register", {
+      const response = await fetch("https://47287039-bf8e-4eb6-a406-71bfe9007b4f.eu-central-1.cloud.genez.io/user/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,6 +34,7 @@ const UserRegister: React.FC = () => {
 
       if (response.status === 201) {
         setMessage("User registered successfully!");
+        window.location.href = "/login"; 
       } else {
         setMessage("Failed to register user.");
         console.error("Failed to register user:", response.statusText);

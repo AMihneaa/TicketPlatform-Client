@@ -11,7 +11,7 @@ export default function Navbar() {
 
   const routes = [
     { href: "/", label: "Home" },
-    { href: "/routes", label: "Routes" },
+    { href: "/routes/search", label: "Find Route" },
     { href: "/my-tickets", label: "My Tickets" },
   ]
 

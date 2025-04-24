@@ -21,7 +21,7 @@ const UserLogin: React.FC = () => {
     try {
 
         console.log("User Data:", userData);
-      const response = await fetch("http://localhost:8080/user/login", {
+      const response = await fetch("https://47287039-bf8e-4eb6-a406-71bfe9007b4f.eu-central-1.cloud.genez.io/user/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,7 +36,7 @@ const UserLogin: React.FC = () => {
           console.log("Login successful:", data);
             localStorage.setItem("Authorization", data.token);
 
-            window.location.href = "/home"; 
+            window.location.href = "/"; 
         }
         );
         setMessage("Login successful!");
