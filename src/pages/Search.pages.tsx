@@ -52,8 +52,9 @@ export default function RouteSearchPage() {
     setSearchPerformed(true)
 
     try {
+      const API_URL = import.meta.env.VITE_BACK_END_URL;
       const response = await fetch(
-        `https://47287039-bf8e-4eb6-a406-71bfe9007b4f.eu-central-1.cloud.genez.io/reservation/user/${encodeURIComponent(departure)}/to/${encodeURIComponent(arrival)}`,
+        `${API_URL}/reservation/user/${encodeURIComponent(departure)}/to/${encodeURIComponent(arrival)}`,
         {
           headers: {
             "Content-Type": "application/json",

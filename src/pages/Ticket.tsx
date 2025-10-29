@@ -11,7 +11,8 @@ export default function MyTicketsPage() {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const response = await fetch("https://47287039-bf8e-4eb6-a406-71bfe9007b4f.eu-central-1.cloud.genez.io/reservation/user/myTicket", {
+        const API_URL = import.meta.env.VITE_BACK_END_URL;
+        const response = await fetch(`${API_URL}/reservation/user/myTicket`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("Authorization")}`,
