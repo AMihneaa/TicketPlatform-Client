@@ -1,10 +1,4 @@
-import React, { useEffect, useState } from "react"
-import { Outlet, useLocation } from "react-router-dom"
-import Navbar from "@/component/navbar.component"
-import Footer from "@/component/footer.component"
-import { ThemeProvider } from "@/component/theme-provider.component"
-import { Toaster } from "@/components/ui/sonner"
-
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -17,8 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { MessageCircle, X } from "lucide-react"
 
-/* ===================== CHAT WIDGET DIRECT ÎN ACEST FIȘIER ===================== */
-
 type ChatMessage = {
   id: number
   role: "user" | "assistant"
@@ -27,7 +19,7 @@ type ChatMessage = {
 
 let messageId = 0
 
-function ChatWidget() {
+export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
   const [isSending, setIsSending] = useState(false)
@@ -171,40 +163,5 @@ function ChatWidget() {
         </Card>
       )}
     </>
-  )
-}
-
-/* ===================== ROOT LAYOUT ===================== */
-
-export default function RootLayout() {
-  const { pathname } = useLocation()
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [pathname])
-
-  return (
-    <ThemeProvider>
-      {/* Background global cu gradient subtil */}
-      <div className="min-h-screen bg-slate-950">
-        <div
-          className="pointer-events-none fixed inset-0 z-0 opacity-40"
-          aria-hidden="true"
-        >
-          <div className="absolute -left-40 top-[-10rem] h-80 w-80 rounded-full bg-gradient-to-br from-sky-500/30 to-indigo-500/10 blur-3xl" />
-          <div className="absolute bottom-[-8rem] right-[-8rem] h-72 w-72 rounded-full bg-gradient-to-tr from-emerald-400/20 to-cyan-500/10 blur-3xl" />
-        </div>
-
-        <div className="relative z-10 flex min-h-screen flex-col bg-gradient-to-b from-slate-950/80 via-slate-950/85 to-slate-950">
-          <Navbar />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <Footer />
-          <ChatWidget />
-          <Toaster position="top-right" />
-        </div>
-      </div>
-    </ThemeProvider>
   )
 }
