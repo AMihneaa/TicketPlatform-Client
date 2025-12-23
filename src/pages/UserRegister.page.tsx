@@ -40,6 +40,15 @@ export default function UserRegisterPage() {
               Register to book and manage your tickets across all transport types.
             </p>
           </CardHeader>
+    try {
+      const API_URL = import.meta.env.VITE_BACK_END_URL;
+      const response = await fetch(`${API_URL}/user/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
 
           <CardContent className="space-y-4">
             <div>

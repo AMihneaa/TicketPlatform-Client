@@ -33,43 +33,36 @@ export default function MyTicketsPage() {
       }
 
       try {
-        setIsLoading(true);
-        setError(null);
+        const API_URL = import.meta.env.VITE_BACK_END_URL;
+        const response = await fetch(`${API_URL}/reservation/user/myTicket`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("Authorization")}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-        const response = await fetch(
-          "https://47287039-bf8e-4eb6-a406-71bfe9007b4f.eu-central-1.cloud.genez.io/reservation/user/myTicket",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const raw = await response.json() as Record<
+          string,
+          Record<
+            string,
+            {
+              "Reservation Status": "ACTIVE" | "INACTIVE";
+              "Routes": string[];
+            }
+          >
+        >;
 
-        if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            throw new Error("Your session has expired. Please log in again.");
-          } else {
-            throw new Error(
-              "Failed to load tickets. Please try again later."
-            );
-          }
-        }
+        const parsed: NormalizedReservation[] = Object.entries(raw).map(([id, transportMap]) => {
+          const [transportType, details] = Object.entries(transportMap)[0];
+          return {
+            id,
+            transportType,
+            reservationStatus: details["Reservation Status"],
+            routes: details["Routes"],
+          };
+        });
 
-        const raw = (await response.json()) as RawResponse;
-
-        const parsed: NormalizedReservation[] = Object.entries(raw).map(
-          ([id, transportMap]) => {
-            const [transportType, details] = Object.entries(transportMap)[0];
-            return {
-              id,
-              transportType,
-              reservationStatus: details["Reservation Status"],
-              routes: details["Routes"],
-            };
-          }
-        );
 
         setTickets(parsed);
       } catch (err) {

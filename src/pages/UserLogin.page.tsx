@@ -28,6 +28,18 @@ export default function UserLoginPage() {
           </p>
         </div>
 
+    try {
+      const API_URL = import.meta.env.VITE_BACK_END_URL;
+      const response = await fetch(`${API_URL}/user/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      console.log("Response:", response);
+
         {/* Card dreapta */}
         <Card className="flex-1 border-slate-800 bg-slate-950/70 backdrop-blur-sm shadow-lg">
           <CardHeader className="text-center">
