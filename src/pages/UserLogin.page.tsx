@@ -1,22 +1,32 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { LogIn } from "lucide-react";
 
-interface UserData {
-  username: string;
-  password: string;
-}
+export default function UserLoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-const UserLogin: React.FC = () => {
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [message, setMessage] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const userData: UserData = {
-      username,
-      password,
-    };
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex items-center justify-center">
+      <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-12 px-6 py-16">
+        {/* Text stanga */}
+        <div className="flex-1 text-center md:text-left space-y-5">
+          <p className="tracking-widest text-xs text-sky-400 uppercase">
+            Travel Platform
+          </p>
+          <h1 className="text-4xl font-bold leading-tight md:text-5xl">
+            One place for all <span className="text-sky-400">your journeys</span>.
+          </h1>
+          <p className="max-w-md text-slate-400 text-sm">
+            Keep track of your tickets, routes and upcoming trips with a simple and elegant interface.
+          </p>
+          <p className="text-xs text-slate-600">
+            Secure login • No extra fees • Instant access
+          </p>
+        </div>
 
     try {
       const API_URL = import.meta.env.VITE_BACK_END_URL;
@@ -30,79 +40,55 @@ const UserLogin: React.FC = () => {
 
       console.log("Response:", response);
 
-      if (response.ok) {
-        response.json().then((data) => {
-          console.log("Login successful:", data);
-            localStorage.setItem("Authorization", data.token);
-
-            window.location.href = "/"; 
-        }
-        );
-        setMessage("Login successful!");
-      } else {
-        setMessage("Failed to login.");
-        console.error("Failed to login:", response.statusText);
-      }
-    } catch (error) {
-      setMessage("Error during login.");
-      console.error("Error during login:", error);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-96 p-6 bg-white rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">Login to Public Transport Tickets</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-600 font-medium" htmlFor="userName">
-              Username
-            </label>
-            <input
-              type="text"
-              id="userName"
-              name="userName"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your username"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-600 font-medium" htmlFor="password">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-          {message && (
-            <div
-              className={`mt-4 p-3 rounded-md text-center ${
-                message.includes("Error") || message.includes("Failed") ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
-              }`}
-            >
-              {message}
+        {/* Card dreapta */}
+        <Card className="flex-1 border-slate-800 bg-slate-950/70 backdrop-blur-sm shadow-lg">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-sky-500/10">
+              <LogIn className="h-5 w-5 text-sky-400" />
             </div>
-          )}
-          <button
-            type="submit"
-            className="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Login
-          </button>
-        </form>
+            <CardTitle className="text-lg font-semibold">Sign in to your account</CardTitle>
+            <p className="text-sm text-slate-400">
+              Access your tickets, active routes and travel assistant.
+            </p>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-xs text-slate-300 mb-1 block">Username</label>
+              <Input
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="bg-slate-900 border-slate-700 text-slate-100"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-slate-300 mb-1 block">Password</label>
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-slate-900 border-slate-700 text-slate-100"
+              />
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-3">
+            <Button className="w-full bg-sky-500 text-slate-950 hover:bg-sky-400 font-semibold">
+              Login
+            </Button>
+            <p className="text-center text-sm text-slate-400">
+              Don’t have an account?{" "}
+              <Link to="/register" className="text-sky-400 hover:underline">
+                Register
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
-};
-
-export default UserLogin;
+}
