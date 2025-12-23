@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import Navbar from "@/component/navbar.component"
 import Footer from "@/component/footer.component"
@@ -6,18 +6,12 @@ import { ThemeProvider } from "@/component/theme-provider.component"
 import { Toaster } from "@/components/ui/sonner"
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { MessageCircle, X } from "lucide-react"
 
-/* ===================== CHAT WIDGET DIRECT ÎN ACEST FIȘIER ===================== */
+/* ===================== CHAT WIDGET ===================== */
 
 type ChatMessage = {
   id: number
@@ -25,7 +19,72 @@ type ChatMessage = {
   content: string
 }
 
+type ChatApiJson = {
+  reply?: string
+  text?: string
+  message?: string
+  session_id?: string
+}
+
 let messageId = 0
+
+const CHAT_API_URL = "http://127.0.0.1:8000/chat" // fara trailing slash
+
+function getOrCreateSessionId() {
+  const key = "chat_session_id"
+  const existing = localStorage.getItem(key)
+  if (existing) return existing
+
+  const fresh =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  localStorage.setItem(key, fresh)
+  return fresh
+}
+
+// Parseaza SSE (data: ... \n\n). Accepta JSON {"token":"..."} / {"text":"..."} sau text direct.
+function parseSseEvents(buffer: string) {
+  const events = buffer.split("\n\n")
+  const remainder = events.pop() ?? ""
+  const payloads: string[] = []
+
+  for (const evt of events) {
+    const lines = evt.split("\n")
+    const dataLines = lines.filter((l) => l.startsWith("data:"))
+    if (!dataLines.length) continue
+
+    const data = dataLines.map((l) => l.slice(5).trimStart()).join("\n")
+
+    try {
+      const obj = JSON.parse(data)
+      if (typeof obj?.token === "string") payloads.push(obj.token)
+      else if (typeof obj?.text === "string") payloads.push(obj.text)
+      else payloads.push(String(data))
+    } catch {
+      payloads.push(data)
+    }
+  }
+
+  return { payloads, remainder }
+}
+
+// Daca serverul trimite JSON ca text (fallback), extrage reply
+function extractReplyFromMaybeJson(raw: string): string {
+  const s = raw.trim()
+  if (!s.startsWith("{")) return raw
+  try {
+    const obj = JSON.parse(s) as ChatApiJson
+    return obj.reply ?? obj.text ?? obj.message ?? raw
+  } catch {
+    return raw
+  }
+}
+
+function normalizeForDisplay(text: string): string {
+  return text.replace(/\r\n/g, "\n").trim()
+}
 
 function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
@@ -40,11 +99,57 @@ function ChatWidget() {
     },
   ])
 
+  const sessionIdRef = useRef<string>("")
+  const abortRef = useRef<AbortController | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    sessionIdRef.current = getOrCreateSessionId()
+  }, [])
+
+  // auto-scroll la ultimul mesaj
+  useEffect(() => {
+    if (!isOpen) return
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    })
+  }, [messages, isOpen])
+
+  // opreste stream-ul daca inchizi widget-ul
+  useEffect(() => {
+    if (!isOpen && abortRef.current) {
+      abortRef.current.abort()
+      abortRef.current = null
+      setIsSending(false)
+    }
+  }, [isOpen])
+
   const handleToggle = () => setIsOpen((prev) => !prev)
+
+  const appendToAssistantMessage = (assistantId: number, chunk: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === assistantId ? { ...m, content: m.content + chunk } : m
+      )
+    )
+  }
+
+  const replaceAssistantMessage = (assistantId: number, content: string) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === assistantId ? { ...m, content } : m))
+    )
+  }
 
   const handleSend = async () => {
     const trimmed = input.trim()
     if (!trimmed || isSending) return
+
+    // opreste orice stream anterior
+    if (abortRef.current) {
+      abortRef.current.abort()
+      abortRef.current = null
+    }
 
     const userMessage: ChatMessage = {
       id: ++messageId,
@@ -52,31 +157,101 @@ function ChatWidget() {
       content: trimmed,
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    const assistantId = ++messageId
+    const assistantMessage: ChatMessage = {
+      id: assistantId,
+      role: "assistant",
+      content: "",
+    }
+
+    setMessages((prev) => [...prev, userMessage, assistantMessage])
     setInput("")
     setIsSending(true)
 
+    const controller = new AbortController()
+    abortRef.current = controller
+
     try {
-      const replyText =
-        "For now I am a demo. Here you will see the optimal route or ticket suggestions coming from LM Studio."
+      const res = await fetch(CHAT_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/event-stream, text/plain, application/json",
+        },
+        body: JSON.stringify({
+          message: trimmed,
+          session_id: sessionIdRef.current,
+        }),
+        signal: controller.signal,
+      })
 
-      const assistantMessage: ChatMessage = {
-        id: ++messageId,
-        role: "assistant",
-        content: replyText,
+      if (!res.ok) {
+        const t = await res.text().catch(() => "")
+        throw new Error(`HTTP ${res.status} ${t}`)
       }
 
-      setMessages((prev) => [...prev, assistantMessage])
-    } catch {
-      const errorMessage: ChatMessage = {
-        id: ++messageId,
-        role: "assistant",
-        content:
-          "Sorry, I couldn't reach the assistant service. Please try again later.",
+      const contentType = res.headers.get("content-type") || ""
+
+      // CASE 1: JSON (cel pe care il ai acum)
+      if (contentType.includes("application/json")) {
+        const data = (await res.json().catch(() => null)) as ChatApiJson | null
+        const reply = normalizeForDisplay(
+          data?.reply ?? data?.text ?? data?.message ?? "No reply from server."
+        )
+        replaceAssistantMessage(assistantId, reply)
+        return
       }
-      setMessages((prev) => [...prev, errorMessage])
+
+      // CASE 2: Streaming / text
+      if (!res.body) throw new Error("No response body (stream not supported).")
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder("utf-8")
+
+      let buffer = ""
+      let gotAnyData = false
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+
+        gotAnyData = true
+        const chunk = decoder.decode(value, { stream: true })
+
+        if (contentType.includes("text/event-stream")) {
+          buffer += chunk
+          const { payloads, remainder } = parseSseEvents(buffer)
+          buffer = remainder
+          for (const p of payloads) appendToAssistantMessage(assistantId, p)
+        } else {
+          appendToAssistantMessage(assistantId, chunk)
+        }
+      }
+
+      // daca backend-ul a trimis totul ca text JSON (fallback), extrage reply
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: normalizeForDisplay(extractReplyFromMaybeJson(m.content)) }
+            : m
+        )
+      )
+
+      if (!gotAnyData) {
+        replaceAssistantMessage(assistantId, "No content received from server.")
+      }
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
+        replaceAssistantMessage(assistantId, "[stopped]")
+      } else {
+        replaceAssistantMessage(
+          assistantId,
+          "Sorry, I couldn't reach the assistant service. Please try again later."
+        )
+      }
     } finally {
       setIsSending(false)
+      abortRef.current = null
     }
   }
 
@@ -114,6 +289,7 @@ function ChatWidget() {
                 Ask about routes, prices or your tickets.
               </p>
             </div>
+
             <Button
               variant="ghost"
               size="icon"
@@ -126,7 +302,10 @@ function ChatWidget() {
           </CardHeader>
 
           <CardContent className="flex-1 pb-2">
-            <div className="h-full space-y-3 overflow-y-auto pr-3">
+            <div
+              ref={scrollRef}
+              className="h-full space-y-3 overflow-y-auto pr-3"
+            >
               {messages.map((m) => (
                 <div
                   key={m.id}
@@ -135,13 +314,13 @@ function ChatWidget() {
                   }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+                    className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${
                       m.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground"
                     }`}
                   >
-                    {m.content}
+                    {m.content || (m.role === "assistant" && isSending ? "..." : "")}
                   </div>
                 </div>
               ))}
@@ -162,6 +341,7 @@ function ChatWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="text-sm"
+                disabled={isSending}
               />
               <Button type="submit" size="sm" disabled={isSending}>
                 {isSending ? "..." : "Send"}
@@ -185,7 +365,6 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      {/* Background global cu gradient subtil */}
       <div className="min-h-screen bg-slate-950">
         <div
           className="pointer-events-none fixed inset-0 z-0 opacity-40"
