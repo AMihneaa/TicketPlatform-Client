@@ -1,11 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
 /* 
 ---break--- */
 @custom-variant dark (&:is(.dark *));
-
-/* vechiul @layer base cu body l-am înlocuit cu unul unic la final */
-
 
 /* 
 ---break--- */
@@ -46,14 +44,15 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
+
 /* 
 ---break--- */
 /* 🔹 FACEM TEMA DE BAZĂ DARK (copy din .dark) */
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(0.18 0.01 260);        /* dark navy-gray */
-  --foreground: oklch(0.95 0.005 260);       /* aproape alb */
+  --background: oklch(0.18 0.01 260);
+  --foreground: oklch(0.95 0.005 260);
 
   --card: oklch(0.21 0.01 260);
   --card-foreground: var(--foreground);
@@ -61,7 +60,7 @@
   --popover: oklch(0.22 0.015 260);
   --popover-foreground: var(--foreground);
 
-  --primary: oklch(0.7 0.15 250);            /* albastru soft */
+  --primary: oklch(0.7 0.15 250);
   --primary-foreground: oklch(0.98 0.01 260);
 
   --secondary: oklch(0.3 0.02 260);

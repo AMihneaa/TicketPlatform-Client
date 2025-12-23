@@ -1,5 +1,4 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
@@ -7,7 +6,8 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        // IMPORTANT: min-h-0 permite copiilor (flex children) sa aiba overflow/scroll corect
+        "bg-card text-card-foreground flex min-h-0 flex-col gap-6 rounded-xl border py-6 shadow-sm",
         className
       )}
       {...props}
@@ -65,7 +65,8 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-6", className)}
+      // IMPORTANT: min-h-0 ajuta zona de continut sa poata scadea si sa permita scroll in copii
+      className={cn("px-6 min-h-0", className)}
       {...props}
     />
   )

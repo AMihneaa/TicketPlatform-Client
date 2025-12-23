@@ -1,12 +1,6 @@
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { MessageCircle, X } from "lucide-react"
@@ -18,6 +12,7 @@ type ChatMessage = {
 }
 
 let messageId = 0
+const CHAT_API_URL = "http://127.0.0.1:8000/chat" // fara trailing slash
 
 function getOrCreateSessionId() {
   const key = "chat_session_id"
@@ -33,7 +28,6 @@ function getOrCreateSessionId() {
   return fresh
 }
 
-// Parseaza SSE (data: ... \n\n). Accepta JSON {"token":"..."} sau {"text":"..."} sau text direct.
 function parseSseEvents(buffer: string) {
   const events = buffer.split("\n\n")
   const remainder = events.pop() ?? ""
@@ -59,8 +53,6 @@ function parseSseEvents(buffer: string) {
   return { payloads, remainder }
 }
 
-const CHAT_API_URL = "http://127.0.0.1:8000/chat" // IMPORTANT: fara trailing slash => evita 307
-
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -76,22 +68,21 @@ export default function ChatWidget() {
 
   const sessionIdRef = useRef<string>("")
   const abortRef = useRef<AbortController | null>(null)
-  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     sessionIdRef.current = getOrCreateSessionId()
   }, [])
 
-  // auto-scroll
+  // auto-scroll la final
   useEffect(() => {
     if (!isOpen) return
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    })
+    const el = scrollAreaRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
   }, [messages, isOpen])
 
-  // daca inchizi widget-ul in timp ce stream-uieste, opreste request-ul
+  // inchidere -> opreste stream
   useEffect(() => {
     if (!isOpen && abortRef.current) {
       abortRef.current.abort()
@@ -100,7 +91,7 @@ export default function ChatWidget() {
     }
   }, [isOpen])
 
-  const handleToggle = () => setIsOpen((prev) => !prev)
+  const handleToggle = () => setIsOpen((p) => !p)
 
   const appendToAssistantMessage = (assistantId: number, chunk: string) => {
     setMessages((prev) =>
@@ -120,7 +111,6 @@ export default function ChatWidget() {
     const trimmed = input.trim()
     if (!trimmed || isSending) return
 
-    // opreste orice stream anterior
     if (abortRef.current) {
       abortRef.current.abort()
       abortRef.current = null
@@ -147,8 +137,6 @@ export default function ChatWidget() {
     abortRef.current = controller
 
     try {
-      console.log("CHAT ENDPOINT USED:", "http://127.0.0.1:8000/chat")
-
       const res = await fetch(CHAT_API_URL, {
         method: "POST",
         headers: {
@@ -160,28 +148,23 @@ export default function ChatWidget() {
           session_id: sessionIdRef.current,
         }),
         signal: controller.signal,
-        redirect: "error", // IMPORTANT: daca apare iar redirect, vrei sa pice clar, nu sa-l urmeze silent
       })
 
       if (!res.ok) {
         const t = await res.text().catch(() => "")
         throw new Error(`HTTP ${res.status} ${t}`)
       }
-
       if (!res.body) throw new Error("No response body (stream not supported).")
 
       const contentType = res.headers.get("content-type") || ""
       const reader = res.body.getReader()
       const decoder = new TextDecoder("utf-8")
-
       let buffer = ""
-      let gotAnyData = false
 
       while (true) {
         const { value, done } = await reader.read()
         if (done) break
 
-        gotAnyData = true
         const chunk = decoder.decode(value, { stream: true })
 
         if (contentType.includes("text/event-stream")) {
@@ -190,33 +173,17 @@ export default function ChatWidget() {
           buffer = remainder
           for (const p of payloads) appendToAssistantMessage(assistantId, p)
         } else {
-          // plain chunked streaming
           appendToAssistantMessage(assistantId, chunk)
         }
       }
 
-      // flush final (in caz ca a ramas ceva neparsat)
       if (contentType.includes("text/event-stream") && buffer.trim().length) {
         const { payloads } = parseSseEvents(buffer + "\n\n")
         for (const p of payloads) appendToAssistantMessage(assistantId, p)
       }
-
-      if (!gotAnyData) {
-        replaceAssistantMessage(
-          assistantId,
-          "No streamed content received from server."
-        )
-      }
-    } catch (err: unknown) {
-      const e = err as { name?: string; message?: string }
-
-      if (e?.name === "AbortError") {
+    } catch (err: any) {
+      if (err?.name === "AbortError") {
         replaceAssistantMessage(assistantId, "[stopped]")
-      } else if (String(e?.message || "").includes("redirect")) {
-        replaceAssistantMessage(
-          assistantId,
-          "Backend redirected the request (slash mismatch). Check /chat vs /chat/."
-        )
       } else {
         replaceAssistantMessage(
           assistantId,
@@ -250,7 +217,7 @@ export default function ChatWidget() {
       )}
 
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 z-50 flex h-[420px] w-[360px] max-w-[90vw] flex-col border-muted/70 shadow-2xl">
+        <Card className="fixed bottom-6 right-6 z-50 flex h-[420px] w-[360px] max-w-[90vw] flex-col border-muted/70 shadow-2xl overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <div className="space-y-1">
               <CardTitle className="text-base">
@@ -275,10 +242,14 @@ export default function ChatWidget() {
             </Button>
           </CardHeader>
 
-          <CardContent className="flex-1 pb-2">
+          {/* AICI e zona exact din screenshot: LISTA DE MESAJE cu scroll */}
+          <div className="flex-1 min-h-0 px-6 pb-2">
             <div
-              ref={scrollRef}
-              className="h-full space-y-3 overflow-y-auto pr-3"
+              ref={scrollAreaRef}
+              className="h-full min-h-0 overflow-y-auto pr-3 space-y-3"
+              style={{
+                scrollbarGutter: "stable", // pastreaza spatiu pt scrollbar (unde e suportat)
+              }}
             >
               {messages.map((m) => (
                 <div
@@ -288,7 +259,7 @@ export default function ChatWidget() {
                   }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+                    className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words ${
                       m.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-muted text-foreground"
@@ -300,7 +271,7 @@ export default function ChatWidget() {
                 </div>
               ))}
             </div>
-          </CardContent>
+          </div>
 
           <CardFooter className="border-t bg-background/80 px-3 py-2">
             <form
